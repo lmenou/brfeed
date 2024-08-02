@@ -1,0 +1,4 @@
+(executable
+ (public_name brfeed)
+ (name main)
+ (libraries brfeed))
