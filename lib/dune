@@ -1,2 +1,3 @@
 (library
- (name brfeed))
+ (name brfeed)
+ (libraries base stdio curses))
