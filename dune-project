@@ -24,6 +24,9 @@
    curses
    base
    stdio
+   cothttp
+   cothttp-eio
+   eio_main
    (ocaml-lsp-server :build)
    (ocamlformat :build)
    (utop :build)

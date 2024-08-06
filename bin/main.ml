@@ -42,6 +42,20 @@ let add =
   let info = Cmd.info "add" ~doc ~man in
   Cmd.v info Term.(const Brfeed.Cmds.adder $ author $ feed)
 
+let check =
+  let doc = "Check the connection to a live brainfeed service." in
+  let man =
+    [
+      `S Manpage.s_description;
+      `P
+        "Check if you could connect to the remote brainfeed service. \
+         Effectively perform a request to the remote server. You need an \
+         internet for this to function.";
+    ]
+  in
+  let info = Cmd.info "check" ~doc ~man in
+  Cmd.v info Term.(const Brfeed.Cmds.check $ const ())
+
 let main =
   let doc = "Brainfeed's companion to manage your RSS feed database." in
   let man =
@@ -51,6 +65,6 @@ let main =
     ]
   in
   let info = Cmd.info "brfeed" ~version:"%%VERSION%%" ~doc ~man in
-  Cmd.group info [ add ]
+  Cmd.group info [ add; check ]
 
 let () = exit (Cmd.eval main)

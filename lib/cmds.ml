@@ -19,3 +19,33 @@ let adder author feed =
   let fe = match feed with None -> "None" | Some v -> v in
   let module S = Stdio in
   Stdio.printf "author: %s -- feed: %s" auth fe
+
+let check () =
+  let open Cohttp_eio in
+  Eio_main.run @@ fun env ->
+  Eio.Switch.run ~name:"main" @@ fun sw ->
+  let net = Eio.Stdenv.net env in
+  let client = Client.make ~https:None net in
+  try
+    let resp, body =
+      Client.get client (Uri.of_string "http://localhost:4040/") ~sw
+    in
+    if Http.Status.compare resp.status `OK != 0 then
+      let _ =
+        Stdio.printf "%s %d\n" "Request Error" (Http.Status.to_int resp.status)
+      in
+      let r = Eio.Buf_read.of_flow body ~max_size:45 in
+      Stdio.print_endline (Eio.Buf_read.line r)
+    else
+      let r = Eio.Buf_read.of_flow body ~max_size:45 in
+      Stdio.print_endline (Eio.Buf_read.line r)
+    (* NOTE(lmenou): Cannot have context information ? *)
+  with
+  | Eio.Io (Eio.Net.E (Eio.Net.Connection_failure value), _) -> (
+      match value with
+      | Eio.Net.No_matching_addresses ->
+          Stdio.print_endline "Could not find the address"
+      | Eio.Net.Refused _ -> Stdio.print_endline "Connection denied/down"
+      | Eio.Net.Timeout -> Stdio.print_endline "Timeout!")
+  | Eio.Buf_read.Buffer_limit_exceeded ->
+      Stdio.print_endline "Cannot handle the heavy response"

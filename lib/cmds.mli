@@ -17,3 +17,7 @@
 val adder : string option -> string option -> unit
 (** [adder author feed] add the RSS [feed] to the remote database effectively
     for the given [author] *)
+
+val check : unit -> unit
+(** [check ()] attempts a connection to the remote brainfeed database. To check
+    its status. *)

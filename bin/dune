@@ -1,4 +1,4 @@
 (executable
  (public_name brfeed)
  (name main)
- (libraries brfeed cmdliner base stdio))
+ (libraries brfeed cmdliner))
