@@ -14,20 +14,15 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see {:https://www.gnu.org/licenses/}. *)
 
-type verb =
-  | Quiet
-  | Verbose  (** Define the general outputs of the command line tool *)
+open Base
 
-type copts = { force : bool; verb : verb }
-(** Define the command options type *)
+module Body : sig
+  include Stringable.S
+end
 
-val copts : verb -> bool -> copts
-(** Get the command options *)
+type r =
+  | Ok of Http.Response.t * Body.t
+  | Bad of Http.Response.t * Body.t
+  | Error
 
-val add : copts -> string option -> string option -> unit
-(** [adder author feed] add the RSS [feed] to the remote database effectively
-    for the given [author] *)
-
-val check : copts -> unit
-(** [check ()] attempts a connection to the remote brainfeed database. To check
-    its status. *)
+val get : Uri.t -> r
