@@ -14,7 +14,13 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see {:https://www.gnu.org/licenses/}. *)
 
-let adder author feed =
+type verb = Quiet | Verbose
+type copts = { force : bool; verb : verb }
+
+let copts verb force = { verb; force }
+
+let add options author feed =
+  let _, _ = (options.force, options.verb) in
   let auth = match author with None -> "None" | Some v -> v in
   let fe = match feed with None -> "None" | Some v -> v in
   let module S = Stdio in

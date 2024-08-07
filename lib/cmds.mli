@@ -14,7 +14,17 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see {:https://www.gnu.org/licenses/}. *)
 
-val adder : string option -> string option -> unit
+type verb =
+  | Quiet
+  | Verbose  (** Define the general outputs of the command line tool *)
+
+type copts = { force : bool; verb : verb }
+(** Define the command options type *)
+
+val copts : verb -> bool -> copts
+(** Get the command options *)
+
+val add : copts -> string option -> string option -> unit
 (** [adder author feed] add the RSS [feed] to the remote database effectively
     for the given [author] *)
 
