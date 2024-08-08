@@ -14,6 +14,8 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see {:https://www.gnu.org/licenses/}. *)
 
+open Base
+
 type verb = Quiet | Verbose
 
 let copts verb = verb
@@ -67,7 +69,6 @@ let add verb author feed =
           ~query:[ ("author", [ au ]); ("feed", [ fe ]) ]
           ()
       in
-      let _ = print_endline (Uri.to_string uri) in
       let answer = Request.send uri `GET in
       show answer verb
 
@@ -101,3 +102,11 @@ let delete verb author feed =
   | ValidUri uri ->
       let answer = Request.send uri `POST in
       show answer verb
+
+let update verb author feed nauthor nfeed =
+  let _ = verb in
+  let _ = author in
+  let _ = feed in
+  let _ = nauthor in
+  let _ = nfeed in
+  Stdio.print_endline "coucou"
