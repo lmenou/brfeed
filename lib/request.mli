@@ -25,4 +25,4 @@ type r =
   | Bad of Http.Response.t * Body.t
   | Error
 
-val get : Uri.t -> r
+val send : Uri.t -> Http.Method.t -> r

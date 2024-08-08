@@ -18,10 +18,6 @@ open Cmdliner
 
 let copts_t =
   let docs = Manpage.s_common_options in
-  let force =
-    let doc = "Force the command, use this with cautions." in
-    Arg.(value & flag & info [ "force" ] ~docs ~doc)
-  in
   let verb =
     let doc = "Suppress informational output." in
     let quiet = (Brfeed.Cmds.Quiet, Arg.info [ "q"; "quiet" ] ~docs ~doc) in
@@ -31,7 +27,7 @@ let copts_t =
     in
     Arg.(last & vflag_all [ Brfeed.Cmds.Quiet ] [ quiet; verbose ])
   in
-  Term.(const Brfeed.Cmds.copts $ verb $ force)
+  Term.(const Brfeed.Cmds.copts $ verb)
 
 let help_secs =
   [

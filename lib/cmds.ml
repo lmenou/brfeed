@@ -15,27 +15,63 @@
    along with this program.  If not, see {:https://www.gnu.org/licenses/}. *)
 
 type verb = Quiet | Verbose
-type copts = { force : bool; verb : verb }
 
-let copts verb force = { verb; force }
+let copts verb = verb
 
-let add options author feed =
-  let _, _ = (options.force, options.verb) in
-  let auth = match author with None -> "None" | Some v -> v in
-  let fe = match feed with None -> "None" | Some v -> v in
-  let module S = Stdio in
-  Stdio.printf "author: %s -- feed: %s" auth fe
+type check = Not | Yes of string * string
 
-let check options =
-  let _, _ = (options.force, options.verb) in
-  let value = Request.get (Uri.of_string "http://localhost:4040") in
-  match value with
-  | Ok (resp, body) ->
-      Stdio.printf "%s %d %s\n" "OK:"
-        (Http.Status.to_int resp.status)
-        (Request.Body.to_string body)
-  | Request.Bad (resp, body) ->
-      Stdio.printf "%s %d %s\n" "Error:"
-        (Http.Status.to_int resp.status)
-        (Request.Body.to_string body)
-  | Request.Error -> ()
+let check author feed =
+  match (author, feed) with
+  | None, Some _ ->
+      Stdio.eprintf "%s\n%s\n%s\n" "Warning: Author is empty"
+        "Request ill-constructed" "Don't send";
+      Not
+  | Some _, None ->
+      Stdio.eprintf "%s\n%s\n%s\n" "Warning: Feed is empty"
+        "Request ill-constructed" "Don't send";
+      Not
+  | None, None ->
+      Stdio.eprintf "%s\n%s\n%s\n" "Warning: Feed AND Author are empty!"
+        "Request ill-constructed" "Do not send unless --force is used";
+      Not
+  | Some author, Some feed -> Yes (author, feed)
+
+let show response verbose =
+  match response with
+  | Request.Ok (resp, body) -> (
+      match verbose with
+      | Verbose ->
+          Stdio.printf "%s %d %s\n" "OK:"
+            (Http.Status.to_int resp.status)
+            (Request.Body.to_string body)
+      | Quiet -> Stdio.printf "%s %d\n" "OK" (Http.Status.to_int resp.status))
+  | Request.Bad (resp, body) -> (
+      match verbose with
+      | Verbose ->
+          Stdio.printf "%s %d %s\n" "Error:"
+            (Http.Status.to_int resp.status)
+            (Request.Body.to_string body)
+      | Quiet -> Stdio.printf "%s %d" "Error" (Http.Status.to_int resp.status))
+  | Request.Error -> (
+      match verbose with
+      | Verbose -> Stdio.printf "%s %s\n" "Internal Error:" "Report the bug."
+      | Quiet -> Stdio.printf "%s\n" "Error")
+
+let add verb author feed =
+  let ok = check author feed in
+  match ok with
+  | Not -> ()
+  | Yes (au, fe) ->
+      let uri =
+        Uri.make ~scheme:"http" ~host:"localhost" ~port:4040 ~path:"/add"
+          ~query:[ ("author", [ au ]); ("feed", [ fe ]) ]
+          ()
+      in
+      let _ = print_endline (Uri.to_string uri) in
+      let answer = Request.send uri `GET in
+      show answer verb
+
+let check verb =
+  let uri = Uri.make ~scheme:"http" ~host:"localhost" ~port:4040 ~path:"/" () in
+  let answer = Request.send uri `GET in
+  show answer verb

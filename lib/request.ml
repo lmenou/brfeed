@@ -34,7 +34,7 @@ type r =
   | Bad of Http.Response.t * Body.t
   | Error
 
-let get uri =
+let send uri meth =
   let module Co = Cohttp_eio in
   Eio_main.run @@ fun env ->
   Eio.Switch.run ~name:"main" @@ fun sw ->
@@ -42,16 +42,12 @@ let get uri =
   (* TODO(lmenou): Deal with https at some point *)
   let client = Co.Client.make ~https:None net in
   try
-    let resp, body = Co.Client.get client uri ~sw in
+    let resp, body = Co.Client.call client ~sw meth uri in
     if not (Int.equal (Http.Status.compare resp.status `OK) 0) then
-      let _ =
-        Stdio.eprintf "%s %d\n" "Request Error:"
-          (Http.Status.to_int resp.status)
-      in
-      let r = Eio.Buf_read.of_flow body ~max_size:45 in
+      let r = Eio.Buf_read.of_flow body ~max_size:8000 in
       Bad (resp, Body.of_string (Eio.Buf_read.line r))
     else
-      let r = Eio.Buf_read.of_flow body ~max_size:45 in
+      let r = Eio.Buf_read.of_flow body ~max_size:8000 in
       Ok (resp, Body.of_string (Eio.Buf_read.line r))
     (* NOTE(lmenou): Cannot have context information ? *)
   with

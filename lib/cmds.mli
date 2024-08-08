@@ -18,16 +18,13 @@ type verb =
   | Quiet
   | Verbose  (** Define the general outputs of the command line tool *)
 
-type copts = { force : bool; verb : verb }
-(** Define the command options type *)
-
-val copts : verb -> bool -> copts
+val copts : verb -> verb
 (** Get the command options *)
 
-val add : copts -> string option -> string option -> unit
+val add : verb -> string option -> string option -> unit
 (** [adder author feed] add the RSS [feed] to the remote database effectively
     for the given [author] *)
 
-val check : copts -> unit
+val check : verb -> unit
 (** [check ()] attempts a connection to the remote brainfeed database. To check
     its status. *)
