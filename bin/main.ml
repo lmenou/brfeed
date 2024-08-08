@@ -19,7 +19,7 @@ open Cmdliner
 let copts_t =
   let docs = Manpage.s_common_options in
   let verb =
-    let doc = "Suppress informational output." in
+    let doc = "Suppress informational output (default)." in
     let quiet = (Brfeed.Cmds.Quiet, Arg.info [ "q"; "quiet" ] ~docs ~doc) in
     let doc = "Give verbose output." in
     let verbose =
@@ -41,18 +41,21 @@ let sdocs = Manpage.s_common_options
 
 let add =
   let author =
-    let doc = "The author's name of the RSS blog." in
+    let doc = "The author's name of the RSS blog to add (mandatory)." in
     Arg.(
       value
       & opt (some string) None
       & info [ "a"; "author" ] ~docv:"AUTHOR" ~doc)
   in
   let feed =
-    let doc = "The RSS feed address." in
+    let doc =
+      "The RSS feed address to add (mandatory, and shall be unique in the \
+       database)."
+    in
     Arg.(
       value & opt (some string) None & info [ "f"; "feed" ] ~docv:"FEED" ~doc)
   in
-  let doc = "Add an RSS feed to the remote database." in
+  let doc = "Add an RSS feed entry to the remote database." in
   let man =
     [
       `S Manpage.s_description;
@@ -68,14 +71,20 @@ let add =
 
 let delete =
   let author =
-    let doc = "The author's name of the RSS blog." in
+    let doc =
+      "The author's name of the RSS blog to delete (optional, if not given the \
+       entry with the provided feed will be deleted)."
+    in
     Arg.(
       value
       & opt (some string) None
       & info [ "a"; "author" ] ~docv:"AUTHOR" ~doc)
   in
   let feed =
-    let doc = "The RSS feed address." in
+    let doc =
+      "The RSS feed address to delete (optional, if not given, all the entries \
+       with the provided author will be deleted)."
+    in
     Arg.(
       value & opt (some string) None & info [ "f"; "feed" ] ~docv:"FEED" ~doc)
   in
@@ -86,7 +95,8 @@ let delete =
       `P
         "Delete an RSS feed to the remote brainfeed database. Effectively \
          perform a request to the remote server. You need an internet for this \
-         to function.";
+         to function. You must provide a value for at least one of the option \
+         for the command have an effect.";
       `Blocks help_secs;
     ]
   in
@@ -109,28 +119,38 @@ let check =
   Cmd.v info Term.(const Brfeed.Cmds.connect $ copts_t)
 
 let update =
+  let onauthor =
+    let doc =
+      "The author's name of the RSS feed entry to update (optional, if not \
+       provided, the entry with the provided feed will be updated)."
+    in
+    Arg.(
+      value & opt (some string) None & info [ "on-author" ] ~docv:"AUTHOR" ~doc)
+  in
+  let onfeed =
+    let doc =
+      "The RSS feed address to update (optional, if not provided, all the \
+       entries with the provided author will be updated)."
+    in
+    Arg.(value & opt (some string) None & info [ "on-feed" ] ~docv:"FEED" ~doc)
+  in
+  let feed =
+    let doc =
+      "The new RSS feed address to give in (optional, nothing happen on the \
+       feed address if not provided)."
+    in
+    Arg.(
+      value & opt (some string) None & info [ "f"; "feed" ] ~docv:"FEED" ~doc)
+  in
   let author =
-    let doc = "The author's name of the RSS blog." in
+    let doc =
+      "The new author's name to give in (optional, nothing happen on the \
+       author name if not provided)."
+    in
     Arg.(
       value
       & opt (some string) None
       & info [ "a"; "author" ] ~docv:"AUTHOR" ~doc)
-  in
-  let feed =
-    let doc = "The RSS feed address." in
-    Arg.(
-      value & opt (some string) None & info [ "f"; "feed" ] ~docv:"FEED" ~doc)
-  in
-  let onfeed =
-    let doc = "The RSS feed address on which update should occur." in
-    Arg.(value & opt (some string) None & info [ "on-feed" ] ~docv:"FEED" ~doc)
-  in
-  let onauthor =
-    let doc =
-      "The author's name of the RSS blog on which update should occur."
-    in
-    Arg.(
-      value & opt (some string) None & info [ "on-author" ] ~docv:"AUTHOR" ~doc)
   in
   let doc = "Update an RSS feed entry on the remote database." in
   let man =
@@ -138,8 +158,11 @@ let update =
       `S Manpage.s_description;
       `P
         "Update an RSS feed to the remote brainfeed database. Effectively \
-         perform a request to the remote server. You need an internet for this \
-         to function.";
+         perform a request to the remote server.\n\
+         You need an internet for this to function.You must at least provide a \
+         value for one of the options among $(b,--on-author) or \
+         $(b,--on-feed), or the command will fail. If you provide nothing for \
+         the other two options, nothing happens effectively.";
       `Blocks help_secs;
     ]
   in
