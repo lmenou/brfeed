@@ -25,6 +25,12 @@ val add : verb -> string option -> string option -> unit
 (** [adder author feed] add the RSS [feed] to the remote database effectively
     for the given [author] *)
 
-val check : verb -> unit
+val connect : verb -> unit
 (** [check ()] attempts a connection to the remote brainfeed database. To check
     its status. *)
+
+val delete : verb -> string option -> string option -> unit
+(** [delete author feed] delete the RSS [feed] to the remote database
+    effectively with the given [author], if [feed] is not given, then all
+    entries with the given author are deleted, if [author] is not given, only
+    the entry with [feed] is deleted *)

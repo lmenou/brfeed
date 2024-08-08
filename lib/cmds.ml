@@ -71,7 +71,33 @@ let add verb author feed =
       let answer = Request.send uri `GET in
       show answer verb
 
-let check verb =
+let connect verb =
   let uri = Uri.make ~scheme:"http" ~host:"localhost" ~port:4040 ~path:"/" () in
   let answer = Request.send uri `GET in
   show answer verb
+
+type v = ValidUri of Uri.t | InvalidUri
+
+let delete verb author feed =
+  let uri =
+    Uri.make ~scheme:"http" ~host:"localhost" ~port:4040 ~path:"/delete" ()
+  in
+  let nuri =
+    match (author, feed) with
+    | Some auth, Some fe ->
+        ValidUri (Uri.with_query uri [ ("author", [ auth ]); ("feed", [ fe ]) ])
+    | Some auth, None -> ValidUri (Uri.with_query uri [ ("author", [ auth ]) ])
+    | None, Some fe -> ValidUri (Uri.with_query uri [ ("feed", [ fe ]) ])
+    | None, None ->
+        Stdio.eprintf "%s\n%s\n%s\n" "Warning: Author is empty"
+          "Request ill-constructed" "Don't send";
+        InvalidUri
+  in
+  match nuri with
+  | InvalidUri ->
+      Stdio.eprintf "%s\n%s\n%s\n" "Warning: Author is empty"
+        "Request ill-constructed" "Don't send";
+      ()
+  | ValidUri uri ->
+      let answer = Request.send uri `POST in
+      show answer verb

@@ -66,6 +66,33 @@ let add =
   let info = Cmd.info "add" ~doc ~sdocs ~man in
   Cmd.v info Term.(const Brfeed.Cmds.add $ copts_t $ author $ feed)
 
+let delete =
+  let author =
+    let doc = "The author's name of the RSS blog." in
+    Arg.(
+      value
+      & opt (some string) None
+      & info [ "a"; "author" ] ~docv:"AUTHOR" ~doc)
+  in
+  let feed =
+    let doc = "The RSS feed address." in
+    Arg.(
+      value & opt (some string) None & info [ "f"; "feed" ] ~docv:"FEED" ~doc)
+  in
+  let doc = "Delete an RSS feed to the remote database." in
+  let man =
+    [
+      `S Manpage.s_description;
+      `P
+        "Delete an RSS feed to the remote brainfeed database. Effectively \
+         perform a request to the remote server. You need an internet for this \
+         to function.";
+      `Blocks help_secs;
+    ]
+  in
+  let info = Cmd.info "delete" ~doc ~sdocs ~man in
+  Cmd.v info Term.(const Brfeed.Cmds.delete $ copts_t $ author $ feed)
+
 let check =
   let doc = "Check the connection to a live brainfeed service." in
   let man =
@@ -79,7 +106,7 @@ let check =
     ]
   in
   let info = Cmd.info "check" ~doc ~sdocs ~man in
-  Cmd.v info Term.(const Brfeed.Cmds.check $ copts_t)
+  Cmd.v info Term.(const Brfeed.Cmds.connect $ copts_t)
 
 let main =
   let doc = "Brainfeed's companion to manage your RSS feed database." in
@@ -91,6 +118,6 @@ let main =
     ]
   in
   let info = Cmd.info "brfeed" ~version:"%%VERSION%%" ~doc ~sdocs ~man in
-  Cmd.group info [ add; check ]
+  Cmd.group info [ add; check; delete ]
 
 let () = exit (Cmd.eval main)
