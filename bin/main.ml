@@ -169,7 +169,7 @@ let update =
   let info = Cmd.info "update" ~doc ~sdocs ~man in
   Cmd.v info
     Term.(
-      const Brfeed.Cmds.update $ copts_t $ onfeed $ onauthor $ feed $ author)
+      const Brfeed.Cmds.update $ copts_t $ onauthor $ onfeed $ author $ feed)
 
 let main =
   let doc = "Brainfeed's companion to manage your RSS feed database." in

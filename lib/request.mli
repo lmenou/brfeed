@@ -16,13 +16,9 @@
 
 open Base
 
-module Body : sig
-  include Stringable.S
-end
-
 type r =
-  | Ok of Http.Response.t * Body.t
-  | Bad of Http.Response.t * Body.t
+  | Ok of Http.Response.t * string
+  | Bad of Http.Response.t * string
   | Error
 
-val send : Uri.t -> Http.Method.t -> r
+val send : ?body:string -> Uri.t -> Http.Method.t -> r

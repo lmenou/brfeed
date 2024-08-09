@@ -43,16 +43,14 @@ let show response verbose =
   | Request.Ok (resp, body) -> (
       match verbose with
       | Verbose ->
-          Stdio.printf "%s %d %s\n" "OK:"
-            (Http.Status.to_int resp.status)
-            (Request.Body.to_string body)
+          Stdio.printf "%s %d %s\n" "OK:" (Http.Status.to_int resp.status) body
       | Quiet -> Stdio.printf "%s %d\n" "OK" (Http.Status.to_int resp.status))
   | Request.Bad (resp, body) -> (
       match verbose with
       | Verbose ->
           Stdio.printf "%s %d %s\n" "Error:"
             (Http.Status.to_int resp.status)
-            (Request.Body.to_string body)
+            body
       | Quiet -> Stdio.printf "%s %d" "Error" (Http.Status.to_int resp.status))
   | Request.Error -> (
       match verbose with
@@ -69,15 +67,13 @@ let add verb author feed =
           ~query:[ ("author", [ au ]); ("feed", [ fe ]) ]
           ()
       in
-      let answer = Request.send uri `GET in
+      let answer = Request.send uri `POST in
       show answer verb
 
 let connect verb =
   let uri = Uri.make ~scheme:"http" ~host:"localhost" ~port:4040 ~path:"/" () in
   let answer = Request.send uri `GET in
   show answer verb
-
-type v = ValidUri of Uri.t | InvalidUri
 
 let delete verb author feed =
   let uri =
@@ -86,27 +82,54 @@ let delete verb author feed =
   let nuri =
     match (author, feed) with
     | Some auth, Some fe ->
-        ValidUri (Uri.with_query uri [ ("author", [ auth ]); ("feed", [ fe ]) ])
-    | Some auth, None -> ValidUri (Uri.with_query uri [ ("author", [ auth ]) ])
-    | None, Some fe -> ValidUri (Uri.with_query uri [ ("feed", [ fe ]) ])
+        `ValidUri
+          (Uri.with_query uri [ ("author", [ auth ]); ("feed", [ fe ]) ])
+    | Some auth, None -> `ValidUri (Uri.with_query uri [ ("author", [ auth ]) ])
+    | None, Some fe -> `ValidUri (Uri.with_query uri [ ("feed", [ fe ]) ])
     | None, None ->
-        Stdio.eprintf "%s\n%s\n%s\n" "Warning: Author is empty"
+        Stdio.eprintf "%s\n%s\n%s\n" "Warning: both FEED and AUTHOR are empty."
           "Request ill-constructed" "Don't send";
-        InvalidUri
+        `InvalidUri
   in
   match nuri with
-  | InvalidUri ->
-      Stdio.eprintf "%s\n%s\n%s\n" "Warning: Author is empty"
-        "Request ill-constructed" "Don't send";
-      ()
-  | ValidUri uri ->
+  | `InvalidUri -> ()
+  | `ValidUri uri ->
       let answer = Request.send uri `POST in
       show answer verb
 
-let update verb author feed nauthor nfeed =
-  let _ = verb in
-  let _ = author in
-  let _ = feed in
-  let _ = nauthor in
-  let _ = nfeed in
-  Stdio.print_endline "coucou"
+let update verb onauthor onfeed author feed =
+  let uri =
+    Uri.make ~scheme:"http" ~host:"localhost" ~port:4040 ~path:"/update" ()
+  in
+  let nuri =
+    match (onauthor, onfeed) with
+    | Some auth, Some fe ->
+        `ValidUri
+          (Uri.with_query uri [ ("author", [ auth ]); ("feed", [ fe ]) ])
+    | Some auth, None -> `ValidUri (Uri.with_query uri [ ("author", [ auth ]) ])
+    | None, Some fe -> `ValidUri (Uri.with_query uri [ ("feed", [ fe ]) ])
+    | None, None ->
+        Stdio.eprintf "%s\n%s\n%s\n" "Warning: both FEED and AUTHOR are empty."
+          "Request ill-constructed" "Don't send";
+        `InvalidUri
+  in
+  let body =
+    match (author, feed) with
+    | Some auth, Some fe ->
+        `ValidBody (Printf.sprintf {|{"author": "%s", "feed": "%s"}|} auth fe)
+    | Some auth, None -> `ValidBody (Printf.sprintf {|{"author": "%s"}|} auth)
+    | None, Some fe -> `ValidBody (Printf.sprintf {|{"feed": "%s"}|} fe)
+    | None, None ->
+        Stdio.eprintf "%s\n%s\n%s\n"
+          "Warning: both new FEED and new AUTHOR are empty."
+          "Request ill-constructed" "Don't send";
+        `InvalidBody
+  in
+  match nuri with
+  | `InvalidUri -> ()
+  | `ValidUri uri -> (
+      match body with
+      | `ValidBody value ->
+          let answer = Request.send ~body:value uri `PUT in
+          show answer verb
+      | `InvalidBody -> ())

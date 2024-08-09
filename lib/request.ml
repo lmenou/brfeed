@@ -16,25 +16,12 @@
 
 open Base
 
-module Body : sig
-  include Stringable.S
-end = struct
-  type t = String of string | JSON of Yojson.Basic.t
-
-  let of_string b =
-    try JSON (Yojson.Basic.from_string b) with Yojson.Json_error _ -> String b
-
-  let to_string = function
-    | String value -> value
-    | JSON value -> Yojson.Basic.to_string value
-end
-
 type r =
-  | Ok of Http.Response.t * Body.t
-  | Bad of Http.Response.t * Body.t
+  | Ok of Http.Response.t * string
+  | Bad of Http.Response.t * string
   | Error
 
-let send uri meth =
+let send ?body uri meth =
   let module Co = Cohttp_eio in
   Eio_main.run @@ fun env ->
   Eio.Switch.run ~name:"main" @@ fun sw ->
@@ -42,13 +29,20 @@ let send uri meth =
   (* TODO(lmenou): Deal with https at some point *)
   let client = Co.Client.make ~https:None net in
   try
-    let resp, body = Co.Client.call client ~sw meth uri in
+    let resp, body =
+      match body with
+      | None -> Co.Client.call client ~sw meth uri
+      | Some bod ->
+          Co.Client.call client ~sw meth uri ~body:(Co.Body.of_string bod)
+            ~headers:
+              (Http.Header.of_list [ ("Content-Type", "application/json") ])
+    in
     if not (Int.equal (Http.Status.compare resp.status `OK) 0) then
       let r = Eio.Buf_read.of_flow body ~max_size:8000 in
-      Bad (resp, Body.of_string (Eio.Buf_read.line r))
+      Bad (resp, Eio.Buf_read.line r)
     else
       let r = Eio.Buf_read.of_flow body ~max_size:8000 in
-      Ok (resp, Body.of_string (Eio.Buf_read.line r))
+      Ok (resp, Eio.Buf_read.line r)
     (* NOTE(lmenou): Cannot have context information ? *)
   with
   | Eio.Io (Eio.Net.E (Eio.Net.Connection_failure value), _) -> (
