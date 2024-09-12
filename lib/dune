@@ -1,3 +1,4 @@
 (library
  (name brfeed)
+ (public_name brfeed)
  (libraries base stdio cohttp-eio eio_main yojson))
