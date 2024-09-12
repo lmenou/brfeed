@@ -26,8 +26,10 @@ let send ?body uri meth =
   Eio_main.run @@ fun env ->
   Eio.Switch.run ~name:"main" @@ fun sw ->
   let net = Eio.Stdenv.net env in
-  (* TODO(lmenou): Deal with https at some point *)
-  let client = Co.Client.make ~https:None net in
+  let client =
+    (Co.Client.make ~https:None net
+     [@ppwarning "TODO(lmenou): Deal with https at some point"])
+  in
   try
     let resp, body =
       match body with
