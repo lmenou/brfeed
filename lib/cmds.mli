@@ -14,9 +14,12 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see {:https://www.gnu.org/licenses/}. *)
 
+(** Define all the utilities provided by the command line tool. *)
+
 type verb =
   | Quiet
-  | Verbose  (** Define the general outputs of the command line tool *)
+  | Verbose
+      (** Type defining the general verbosity of the command line tool. *)
 
 val copts : verb -> verb
 (** Get the wished verbosity of the command *)

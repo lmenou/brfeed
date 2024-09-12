@@ -14,11 +14,13 @@
    You should have received a copy of the GNU General Public License
    along with this program.  If not, see {:https://www.gnu.org/licenses/}. *)
 
-open Base
+(** Construct a request properly and easily. *)
 
 type r =
   | Ok of Http.Response.t * string
   | Bad of Http.Response.t * string
-  | Error
+  | Error  (** Define the response type of a request. *)
 
 val send : ?body:string -> Uri.t -> Http.Method.t -> r
+(** [send ~body uri method] effectively send the [method] type request with the
+    provided [body] (if present) to the remote [uri]. *)
